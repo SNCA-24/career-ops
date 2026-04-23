@@ -1,0 +1,36 @@
+name: Sync upstream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 14 * * 1"   # every Monday at 14:15 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/santifer/career-ops.git
+          git fetch upstream
+
+      - name: Sync main from upstream
+        run: |
+          git checkout main
+          git merge --ff-only upstream/main || {
+            echo "Fast-forward failed. Manual review needed."
+            exit 1
+          }
+
+      - name: Push to fork
+        run: |
+          git push origin main
